@@ -13,11 +13,9 @@ struct NumberView {
 
 int main() {
   std::vector<std::string> schematic;
-
-  for (std::string line; getline(std::cin, line); schematic.push_back(line));
+  for (std::string line; std::getline(std::cin, line); schematic.push_back(line));
 
   std::vector<NumberView> numbers;
-  std::vector<bool> checked;
   for (std::size_t line_idx = 0; line_idx < schematic.size(); ++line_idx) {
     const auto& line = schematic[line_idx];
 
@@ -38,12 +36,12 @@ int main() {
         .length = static_cast<std::size_t>(len),
       };
       numbers.push_back(num);
-      checked.push_back(false);
       last_it = num_end_it;
     }
   }
 
   int result = 0;
+  std::vector<bool> checked(numbers.size(), false);
   for (std::size_t line_idx = 0; line_idx < schematic.size(); ++line_idx) {
     const auto& line = schematic[line_idx];
 
@@ -54,12 +52,12 @@ int main() {
         break;
       }
 
-      auto j = std::distance(std::cbegin(line), gear_it);
-      auto gear_coords = std::make_pair(line_idx, j);
+      auto j = static_cast<std::size_t>(std::distance(std::cbegin(line), gear_it));
 
       std::vector<std::size_t> adjacent_nums;
-      for (int k = 0; k < numbers.size(); k++) {
-        const auto number = numbers[k];
+      adjacent_nums.reserve(4);
+      for (std::size_t k = 0; k < numbers.size(); ++k) {
+        const auto& number = numbers[k];
         auto last_digit_pos = number.start.second + number.length - 1;
         const auto is_part_number =
           !checked[k] &&
@@ -70,23 +68,19 @@ int main() {
            (number.start.second <= j-1 && last_digit_pos >= j+1));
 
         if (is_part_number) {
-          checked[k] = true;
           int num;
           auto [ptr, ec] = std::from_chars(
               schematic[number.start.first].data() + number.start.second,
               schematic[number.start.first].data() + number.start.second + number.length,
               num);
           assert(ec == std::errc());
+
+          checked[k] = true;
           adjacent_nums.push_back(num);
-          const auto first = std::cbegin(schematic[number.start.first]) + number.start.second;
-          const auto last = std::cbegin(schematic[number.start.first]) + number.start.second + number.length;
-          std::string_view num_str(first, last);
-          std::cout << "[" << number.start.first << ", " << number.start.second << "] -> " << number.length << ": " << num_str << std::endl;
         }
       }
 
       if (adjacent_nums.size() == 2) {
-        std::cout << adjacent_nums[0] << " * " << adjacent_nums[1] << std::endl;
         result += (adjacent_nums[0] * adjacent_nums[1]);
       }
 
