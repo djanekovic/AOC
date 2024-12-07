@@ -1,5 +1,5 @@
 #include <iostream>
-#include <algorithm>
+#include <unordered_set>
 #include <tuple>
 #include <fstream>
 #include <vector>
@@ -89,6 +89,15 @@ bool operator==(const Guard& a, const Guard& b) {
   return a.col == b.col && a.direction == b.direction && a.row == b.row;
 }
 
+
+struct hash_guard {
+  size_t operator()(const Guard& g) const {
+    return std::hash<int>{}(g.row) ^
+           std::hash<int>{}(g.col) ^
+           std::hash<int>{}(static_cast<int>(g.direction));
+    }
+};
+
 void print_state(const Guard& g, const std::vector<char>& grid, int grid_width, int grid_height) {
   std::cout << g.row << " " << g.col << " " << static_cast<int>(g.direction) << std::endl;
   for (int i = 0; i < grid_height; i++) {
@@ -154,7 +163,7 @@ int main(int argc, char **argv) {
 
     //print_state(guard, grid, grid_width, grid_height);
 
-    std::vector<Guard> position_buffer{guard};
+    std::unordered_set<Guard, hash_guard> position_set;
     for (int position_idx = 0;; position_idx++) {
       //print_state(guard, grid, grid_width, grid_height);
       const auto [found, steps_made, distance] = guard.walk(grid, grid_width, grid_height);
@@ -162,12 +171,11 @@ int main(int argc, char **argv) {
         break;
       }
 
-      auto it = std::find(position_buffer.begin(), position_buffer.end(), guard);
-      if (it != position_buffer.end()) {
+      if (position_set.contains(guard)) {
         loop_counter++;
         break;
       }
-      position_buffer.push_back(guard);
+      position_set.insert(guard);
     }
   }
 
