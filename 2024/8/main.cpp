@@ -80,12 +80,6 @@ struct Grid {
   }
 };
 
-struct PositionHasher {
-  std::uint64_t operator()(const std::pair<int, int>& p) const {
-    return std::hash<int>{}(p.first) ^ std::hash<int>{}(p.second);
-  }
-};
-
 int main(int argc, char **argv) {
   std::ifstream input{argv[1]};
   Grid grid = Grid::parse(input);
